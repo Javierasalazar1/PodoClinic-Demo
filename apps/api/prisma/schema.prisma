@@ -1,0 +1,187 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  SPECIALIST
+  RECEPTION
+}
+
+enum BiologicalSex {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum ConsultationStatus {
+  DRAFT
+  FINALIZED
+}
+
+enum ConsultationType {
+  FIRST_TIME
+  FOLLOW_UP
+  URGENT
+}
+
+model Clinic {
+  id                  String   @id @default(uuid())
+  name                String
+  logo_url            String?
+  address             String?
+  phone               String?
+  email               String?
+  website             String?
+  registration_number String?
+  primary_color       String   @default("#0F6E56")
+  consent_text        String   @db.Text
+  smtp_host           String?
+  smtp_port           Int?
+  smtp_user           String?
+  smtp_pass           String?
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+}
+
+model User {
+  id                   String         @id @default(uuid())
+  clinic_id            String
+  role                 Role
+  full_name            String
+  professional_title   String?
+  license_number       String?
+  email                String         @unique
+  password_hash        String
+  totp_secret          String?
+  totp_enabled         Boolean        @default(false)
+  profile_photo_url    String?
+  is_active            Boolean        @default(true)
+  created_at           DateTime       @default(now())
+  updated_at           DateTime       @updatedAt
+  consultations        Consultation[] @relation("SpecialistConsultations")
+  refresh_tokens       RefreshToken[]
+  password_reset_tokens PasswordResetToken[]
+  email_change_tokens   EmailChangeToken[]
+  audit_logs           AuditLog[]
+}
+
+model Patient {
+  id                      String         @id @default(uuid())
+  clinic_id               String
+  national_id             String
+  full_name               String
+  date_of_birth           DateTime       @db.Date
+  biological_sex          BiologicalSex
+  gender                  String?
+  phone                   String?
+  email                   String?
+  address                 String?
+  emergency_contact_name  String?
+  emergency_contact_phone String?
+  photo_url               String?
+  archived_at             DateTime?
+  next_visit_date         DateTime?
+  last_reminder_sent_at   DateTime?
+  created_at              DateTime       @default(now())
+  updated_at              DateTime       @updatedAt
+  consultations           Consultation[]
+}
+
+model Consultation {
+  id                       String             @id @default(uuid())
+  clinic_id                String
+  patient_id               String
+  specialist_id            String
+  status                   ConsultationStatus @default(DRAFT)
+  consultation_date        DateTime
+  consultation_type        ConsultationType
+  chief_complaint          String?
+  podiatric_history        Json?
+  medical_history          Json?
+  lifestyle                Json?
+  clinical_examination     Json?
+  biomechanical_evaluation Json?
+  vascular_neurological    Json?
+  treatment_plan           Json?
+  report_pdf_url           String?
+  created_at               DateTime           @default(now())
+  updated_at               DateTime           @updatedAt
+
+  patient   Patient         @relation(fields: [patient_id], references: [id])
+  specialist User           @relation("SpecialistConsultations", fields: [specialist_id], references: [id])
+  photos    ConsultationPhoto[]
+  consent   ConsentRecord?
+}
+
+model ConsultationPhoto {
+  id              String       @id @default(uuid())
+  consultation_id String
+  url             String
+  thumbnail_url   String
+  label           String?
+  order_index     Int
+  created_at      DateTime     @default(now())
+  consultation    Consultation @relation(fields: [consultation_id], references: [id])
+}
+
+model ConsentRecord {
+  id                    String       @id @default(uuid())
+  consultation_id       String       @unique
+  patient_full_name     String
+  patient_national_id   String
+  consent_text_snapshot String       @db.Text
+  signature_url         String
+  signed_at             DateTime
+  ip_address            String
+  consultation          Consultation @relation(fields: [consultation_id], references: [id])
+}
+
+model AuditLog {
+  id            String   @id @default(uuid())
+  user_id       String?
+  clinic_id     String?
+  action        String
+  resource_type String?
+  resource_id   String?
+  ip_address    String
+  user_agent    String
+  created_at    DateTime @default(now())
+  user          User?    @relation(fields: [user_id], references: [id])
+}
+
+model RefreshToken {
+  id         String   @id @default(uuid())
+  user_id    String
+  token_hash String
+  expires_at DateTime
+  revoked    Boolean  @default(false)
+  created_at DateTime @default(now())
+  user       User     @relation(fields: [user_id], references: [id])
+}
+
+model PasswordResetToken {
+  id         String    @id @default(uuid())
+  user_id    String
+  token_hash String
+  expires_at DateTime
+  used_at    DateTime?
+  created_at DateTime  @default(now())
+  user       User      @relation(fields: [user_id], references: [id])
+}
+
+model EmailChangeToken {
+  id         String    @id @default(uuid())
+  user_id    String
+  new_email  String
+  token_hash String
+  expires_at DateTime
+  used_at    DateTime?
+  created_at DateTime  @default(now())
+  user       User      @relation(fields: [user_id], references: [id])
+}

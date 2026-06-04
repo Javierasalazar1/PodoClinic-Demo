@@ -1,0 +1,34 @@
+# PodoClinic — .gitignore
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+.turbo/
+
+# Environment files (never commit!)
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+apps/api/logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Prisma
+apps/api/prisma/migrations/*.sql
+
+# TypeScript
+*.tsbuildinfo

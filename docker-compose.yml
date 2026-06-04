@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: podoclinic-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: podoclinic
+      POSTGRES_PASSWORD: podoclinic_dev
+      POSTGRES_DB: podoclinic
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U podoclinic"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
