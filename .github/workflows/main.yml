@@ -1,0 +1,38 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js 20.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Lint Web App
+      run: npm run lint --workspace=apps/web --if-present
+
+    - name: Build Web App
+      run: npm run build --workspace=apps/web
+
+    - name: Build API
+      run: npm run build --workspace=apps/api
+
+    - name: Run Web Tests
+      run: npm run test --workspace=apps/web
+
+    - name: Run API Tests
+      run: npm run test --workspace=apps/api

@@ -14,6 +14,7 @@ import { specialistsRouter } from "./routes/specialists";
 import { remindersRouter } from "./routes/reminders";
 import { errorHandler } from "./middleware/errorHandler";
 import logger from "./lib/logger";
+import { setupSwagger } from "./swagger";
 
 dotenv.config();
 
@@ -73,6 +74,9 @@ const authLimiter = rateLimit({
 app.get("/api/v1/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
+
+// Swagger
+setupSwagger(app);
 
 // Routes
 // Apply strict auth rate limiting only to credential-based endpoints, not refresh
