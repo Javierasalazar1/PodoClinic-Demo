@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -16,6 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/Card";
 import { apiFetch } from "@/lib/api";
+import DemoEmailModal from "@/components/demo/DemoEmailModal";
 
 const forgotSchema = z.object({
   email: z.string().email("Ingresa un correo válido"),
@@ -24,6 +25,11 @@ const forgotSchema = z.object({
 type ForgotForm = z.infer<typeof forgotSchema>;
 
 export default function ForgotPasswordPage() {
+  const [demoModal, setDemoModal] = useState<{ open: boolean; recipient: string }>({
+    open: false,
+    recipient: "",
+  });
+
   const {
     register,
     handleSubmit,
@@ -32,18 +38,35 @@ export default function ForgotPasswordPage() {
 
   const onSubmit = async (data: ForgotForm) => {
     try {
-      const res = await apiFetch<{ message: string; dev_reset_url?: string; preview_url?: string }>("/auth/forgot-password", {
+      const res = await apiFetch<{
+        message: string;
+        dev_reset_url?: string;
+        preview_url?: string;
+        demo_blocked?: boolean;
+        demo_recipient?: string;
+      }>("/auth/forgot-password", {
         method: "POST",
         body: JSON.stringify(data),
       });
-      toast.success(res.message);
+
+      if (res.demo_blocked) {
+        setDemoModal({ open: true, recipient: res.demo_recipient ?? data.email });
+      } else {
+        toast.success(res.message);
+      }
     } catch (err: any) {
       toast.error(err.error || "Error al enviar solicitud");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-4">
+    <>
+      <DemoEmailModal
+        isOpen={demoModal.open}
+        recipient={demoModal.recipient}
+        onClose={() => setDemoModal({ open: false, recipient: "" })}
+      />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-4">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-1/2 -right-1/4 w-[800px] h-[800px] rounded-full bg-emerald-500/5 blur-3xl" />
         <div className="absolute -bottom-1/2 -left-1/4 w-[600px] h-[600px] rounded-full bg-teal-500/5 blur-3xl" />
@@ -102,6 +125,7 @@ export default function ForgotPasswordPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

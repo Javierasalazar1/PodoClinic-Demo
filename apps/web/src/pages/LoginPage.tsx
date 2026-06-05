@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
-import { Mail, Lock, ShieldCheck, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, ShieldCheck, Eye, EyeOff, AlertTriangle, ClipboardCopy } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -50,8 +50,18 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
+
+  const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
+  const DEMO_EMAIL = import.meta.env.VITE_DEMO_EMAIL || "demo@podoclinic.cl";
+  const DEMO_PASSWORD = import.meta.env.VITE_DEMO_PASSWORD || "Demo1234!";
+
+  const fillDemoCredentials = () => {
+    setValue("email", DEMO_EMAIL);
+    setValue("password", DEMO_PASSWORD);
+  };
 
   const onSubmit = async (data: LoginForm) => {
     try {
@@ -104,6 +114,21 @@ export default function LoginPage() {
             Sistema de Historial Clínico Podológico
           </p>
         </div>
+
+        {/* Banner demo */}
+        {DEMO_MODE && (
+          <div
+            id="demo-banner"
+            className="mb-4 flex items-start gap-3 bg-amber-500/15 border border-amber-400/50 rounded-xl px-4 py-3 text-amber-300 shadow-lg shadow-amber-900/10"
+            role="alert"
+          >
+            <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5 text-amber-400" />
+            <p className="text-sm font-medium leading-snug">
+              <span className="font-bold text-amber-300">Versión demo</span> — los datos se
+              reinician cada 24 horas. No ingreses datos reales.
+            </p>
+          </div>
+        )}
 
         <Card className="border-slate-700/50 bg-slate-800/50 backdrop-blur-xl shadow-2xl">
           <CardHeader className="pb-2">
@@ -229,6 +254,37 @@ export default function LoginPage() {
                 >
                   ¿Olvidaste tu contraseña?
                 </Link>
+              </div>
+            )}
+
+            {/* Panel credenciales demo */}
+            {DEMO_MODE && !requiresTotp && (
+              <div
+                id="demo-credentials-panel"
+                className="mt-5 rounded-xl border border-slate-600/50 bg-slate-700/30 p-4"
+              >
+                <p className="text-xs text-slate-400 font-medium uppercase tracking-wider mb-3">
+                  🔑 Credenciales de prueba
+                </p>
+                <div className="space-y-1.5 mb-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-slate-500">Email</span>
+                    <span className="font-mono text-xs text-slate-200">{DEMO_EMAIL}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-slate-500">Contraseña</span>
+                    <span className="font-mono text-xs text-slate-200">{DEMO_PASSWORD}</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  id="demo-fill-credentials-btn"
+                  onClick={fillDemoCredentials}
+                  className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:bg-amber-500/30 hover:text-amber-200 transition-all duration-150 text-sm font-medium"
+                >
+                  <ClipboardCopy className="w-3.5 h-3.5" />
+                  Usar credenciales demo
+                </button>
               </div>
             )}
           </CardContent>

@@ -15,6 +15,7 @@ import { remindersRouter } from "./routes/reminders";
 import { errorHandler } from "./middleware/errorHandler";
 import logger from "./lib/logger";
 import { setupSwagger } from "./swagger";
+import { startDemoResetJob } from "./jobs/demoReset";
 
 dotenv.config();
 
@@ -96,6 +97,10 @@ app.use(errorHandler);
 if (process.env.NODE_ENV !== "test") {
   app.listen(port, () => {
     logger.info(`PodoClinic API running on port ${port}`);
+    if (process.env.DEMO_MODE === "true") {
+      logger.info("[DEMO] 🎭 Modo demo activo — datos se reinician automáticamente cada 24h");
+      startDemoResetJob();
+    }
   });
 }
 

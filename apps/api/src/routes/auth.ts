@@ -84,8 +84,12 @@ authRouter.post("/login", async (req: Request, res: Response) => {
       return;
     }
 
-    // 2FA check
-    if (user.totp_enabled && user.totp_secret) {
+    // 2FA check — omitido para usuario demo en modo demo
+    const isDemoUser =
+      process.env.DEMO_MODE === "true" &&
+      email === (process.env.DEMO_USER_EMAIL ?? "demo@podoclinic.cl");
+
+    if (!isDemoUser && user.totp_enabled && user.totp_secret) {
       if (!totp_code) {
         res.status(200).json({ requiresTotp: true });
         return;
@@ -358,6 +362,25 @@ authRouter.post("/forgot-password", async (req: Request, res: Response) => {
     },
   });
 
+  // En modo demo, no se envía correo real
+  if (process.env.DEMO_MODE === "true") {
+    await prisma.auditLog.create({
+      data: {
+        user_id: user.id,
+        clinic_id: user.clinic_id,
+        action: "FORGOT_PASSWORD_REQUESTED",
+        ip_address: req.ip ?? "",
+        user_agent: req.headers["user-agent"] ?? "",
+      },
+    });
+    res.json({
+      message: "Si el correo está registrado, se han enviado las instrucciones.",
+      demo_blocked: true,
+      demo_recipient: email,
+    });
+    return;
+  }
+
   const clinic = await prisma.clinic.findUnique({ where: { id: user.clinic_id } });
   
   const transporter = await createTransporter(clinic);
@@ -579,6 +602,16 @@ authRouter.post("/change-email", authenticate, async (req: Request, res: Respons
       user_agent: req.headers["user-agent"] ?? "",
     },
   });
+
+  // En modo demo, no se envía correo real
+  if (process.env.DEMO_MODE === "true") {
+    res.json({
+      message: "Se ha enviado un enlace de verificación al nuevo correo.",
+      demo_blocked: true,
+      demo_recipient: newEmail,
+    });
+    return;
+  }
 
   // Enviar email de verificación al nuevo correo
   const clinic = await prisma.clinic.findUnique({ where: { id: user.clinic_id } });

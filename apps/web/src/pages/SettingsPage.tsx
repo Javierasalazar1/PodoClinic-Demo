@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import { Settings, Building2, Mail, Palette, CheckCircle, AlertCircle, Loader2, Save, FlaskConical, Upload, Trash2, Image as ImageIcon, KeyRound } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { useAuthStore } from "@/stores/authStore";
 import { apiFetch } from "@/lib/api";
+import DemoEmailModal from "@/components/demo/DemoEmailModal";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -55,6 +56,12 @@ export default function SettingsPage() {
   const { user, clearAuth } = useAuthStore();
   const isAdmin = user?.role === "ADMIN";
   const navigate = useNavigate();
+
+  const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
+  const [demoEmailModal, setDemoEmailModal] = useState<{ open: boolean; recipient: string }>({
+    open: false,
+    recipient: "",
+  });
 
   const [clinic, setClinic] = React.useState<ClinicSettings | null>(null);
   const [loadingClinic, setLoadingClinic] = React.useState(false);
@@ -181,14 +188,24 @@ export default function SettingsPage() {
 
   const onChangeEmail = async (data: EmailForm) => {
     try {
-      const res = await apiFetch<{ message: string; dev_verify_url?: string }>("/auth/change-email", {
+      const res = await apiFetch<{
+        message: string;
+        dev_verify_url?: string;
+        demo_blocked?: boolean;
+        demo_recipient?: string;
+      }>("/auth/change-email", {
         method: "POST",
         body: JSON.stringify({
           currentPassword: data.currentPassword,
           newEmail: data.newEmail,
         }),
       });
-      toast.success("Enlace de confirmación enviado a tu nuevo correo.");
+
+      if (res.demo_blocked) {
+        setDemoEmailModal({ open: true, recipient: res.demo_recipient ?? data.newEmail });
+      } else {
+        toast.success("Enlace de confirmación enviado a tu nuevo correo.");
+      }
       resetEmail();
     } catch (err: any) {
       toast.error(err.error || "Error al solicitar el cambio de correo");
@@ -397,7 +414,13 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto space-y-6">
+    <>
+      <DemoEmailModal
+        isOpen={demoEmailModal.open}
+        recipient={demoEmailModal.recipient}
+        onClose={() => setDemoEmailModal({ open: false, recipient: "" })}
+      />
+      <div className="p-6 max-w-3xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <Settings className="text-emerald-600" size={24} />
@@ -1097,5 +1120,6 @@ export default function SettingsPage() {
         document.body
       )}
     </div>
+    </>
   );
 }
