@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { RutInput, LettersInput } from "@/components/ui/MaskedInputs";
 import { apiFetch } from "@/lib/api";
 import { useAuthStore } from "@/stores/authStore";
 import SignaturePad from "@/components/consultation/SignaturePad";
@@ -891,8 +892,32 @@ export default function ConsultationFormPage() {
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input label="Nombre de quien firma" required error={errors.patient_signature_name?.message} {...register("patient_signature_name")} />
-                <Input label="RUT / Identificación" required error={errors.patient_signature_rut?.message} {...register("patient_signature_rut")} />
+                <Controller
+                  control={control}
+                  name="patient_signature_name"
+                  render={({ field }) => (
+                    <LettersInput
+                      label="Nombre de quien firma"
+                      required
+                      error={errors.patient_signature_name?.message}
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+                <Controller
+                  control={control}
+                  name="patient_signature_rut"
+                  render={({ field }) => (
+                    <RutInput
+                      label="RUT / Identificación"
+                      required
+                      error={errors.patient_signature_rut?.message}
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
               </div>
 
               <div className="flex flex-col gap-2">

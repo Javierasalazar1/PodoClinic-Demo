@@ -20,11 +20,12 @@ import {
   X,
 } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
+import { RutInput, PhoneInput, LettersInput } from "@/components/ui/MaskedInputs";
 
 const patientSchema = z.object({
   national_id: z.string().min(1, "Identificación obligatoria"),
@@ -102,7 +103,7 @@ export default function PatientDetailPage() {
   const [archiving, setArchiving] = React.useState(false);
 
   const {
-    register,
+    control,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
@@ -449,48 +450,79 @@ export default function PatientDetailPage() {
                 <div className="space-y-4">
                   <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 border-b pb-1">Identificación</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Input
-                      id="edit-patient-national-id"
-                      label="RUT / Identificación"
-                      placeholder="12.345.678-9 o pasaporte"
-                      required
-                      error={errors.national_id?.message}
-                      {...register("national_id")}
+                    <Controller
+                      control={control}
+                      name="national_id"
+                      render={({ field }) => (
+                        <RutInput
+                          id="edit-patient-national-id"
+                          label="RUT / Identificación"
+                          required
+                          error={errors.national_id?.message}
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                        />
+                      )}
                     />
-                    <Input
-                      id="edit-patient-full-name"
-                      label="Nombre completo"
-                      placeholder="María González López"
-                      required
-                      error={errors.full_name?.message}
-                      {...register("full_name")}
+                    <Controller
+                      control={control}
+                      name="full_name"
+                      render={({ field }) => (
+                        <LettersInput
+                          id="edit-patient-full-name"
+                          label="Nombre completo"
+                          placeholder="María González López"
+                          required
+                          error={errors.full_name?.message}
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                        />
+                      )}
                     />
-                    <Input
-                      id="edit-patient-dob"
-                      label="Fecha de nacimiento"
-                      type="date"
-                      required
-                      error={errors.date_of_birth?.message}
-                      {...register("date_of_birth")}
+                    <Controller
+                      control={control}
+                      name="date_of_birth"
+                      render={({ field }) => (
+                        <Input
+                          id="edit-patient-dob"
+                          label="Fecha de nacimiento"
+                          type="date"
+                          required
+                          error={errors.date_of_birth?.message}
+                          {...field}
+                        />
+                      )}
                     />
-                    <Select
-                      id="edit-patient-sex"
-                      label="Sexo biológico"
-                      required
-                      options={[
-                        { value: "FEMALE", label: "Femenino" },
-                        { value: "MALE", label: "Masculino" },
-                        { value: "OTHER", label: "Otro" },
-                      ]}
-                      error={errors.biological_sex?.message}
-                      {...register("biological_sex")}
+                    <Controller
+                      control={control}
+                      name="biological_sex"
+                      render={({ field }) => (
+                        <Select
+                          id="edit-patient-sex"
+                          label="Sexo biológico"
+                          required
+                          options={[
+                            { value: "FEMALE", label: "Femenino" },
+                            { value: "MALE", label: "Masculino" },
+                            { value: "OTHER", label: "Otro" },
+                          ]}
+                          error={errors.biological_sex?.message}
+                          {...field}
+                        />
+                      )}
                     />
                     <div className="sm:col-span-2">
-                      <Input
-                        id="edit-patient-gender"
-                        label="Género (opcional)"
-                        placeholder="Identidad de género"
-                        {...register("gender")}
+                      <Controller
+                        control={control}
+                        name="gender"
+                        render={({ field }) => (
+                          <Input
+                            id="edit-patient-gender"
+                            label="Género (opcional)"
+                            placeholder="Identidad de género"
+                            {...field}
+                          />
+                        )}
                       />
                     </div>
                   </div>
@@ -500,28 +532,45 @@ export default function PatientDetailPage() {
                 <div className="space-y-4 pt-2">
                   <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 border-b pb-1">Contacto</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Input
-                      id="edit-patient-phone"
-                      label="Teléfono"
-                      type="tel"
-                      placeholder="+56 9 1234 5678"
-                      error={errors.phone?.message}
-                      {...register("phone")}
+                    <Controller
+                      control={control}
+                      name="phone"
+                      render={({ field }) => (
+                        <PhoneInput
+                          id="edit-patient-phone"
+                          label="Teléfono"
+                          error={errors.phone?.message}
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                        />
+                      )}
                     />
-                    <Input
-                      id="edit-patient-email"
-                      label="Correo electrónico"
-                      type="email"
-                      placeholder="paciente@email.com"
-                      error={errors.email?.message}
-                      {...register("email")}
+                    <Controller
+                      control={control}
+                      name="email"
+                      render={({ field }) => (
+                        <Input
+                          id="edit-patient-email"
+                          label="Correo electrónico"
+                          type="email"
+                          placeholder="paciente@email.com"
+                          error={errors.email?.message}
+                          {...field}
+                        />
+                      )}
                     />
                     <div className="sm:col-span-2">
-                      <Input
-                        id="edit-patient-address"
-                        label="Dirección"
-                        placeholder="Av. Providencia 123, Santiago"
-                        {...register("address")}
+                      <Controller
+                        control={control}
+                        name="address"
+                        render={({ field }) => (
+                          <Input
+                            id="edit-patient-address"
+                            label="Dirección"
+                            placeholder="Av. Providencia 123, Santiago"
+                            {...field}
+                          />
+                        )}
                       />
                     </div>
                   </div>
@@ -531,18 +580,30 @@ export default function PatientDetailPage() {
                 <div className="space-y-4 pt-2">
                   <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 border-b pb-1">Contacto de emergencia</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Input
-                      id="edit-patient-emergency-name"
-                      label="Nombre contacto"
-                      placeholder="Juan González"
-                      {...register("emergency_contact_name")}
+                    <Controller
+                      control={control}
+                      name="emergency_contact_name"
+                      render={({ field }) => (
+                        <LettersInput
+                          id="edit-patient-emergency-name"
+                          label="Nombre contacto"
+                          placeholder="Juan González"
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                        />
+                      )}
                     />
-                    <Input
-                      id="edit-patient-emergency-phone"
-                      label="Teléfono contacto"
-                      type="tel"
-                      placeholder="+56 9 8765 4321"
-                      {...register("emergency_contact_phone")}
+                    <Controller
+                      control={control}
+                      name="emergency_contact_phone"
+                      render={({ field }) => (
+                        <PhoneInput
+                          id="edit-patient-emergency-phone"
+                          label="Teléfono contacto"
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                        />
+                      )}
                     />
                   </div>
                 </div>
