@@ -80,29 +80,22 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-cyan-950 via-slate-900 to-emerald-950 p-4">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-1/2 -right-1/4 w-[800px] h-[800px] rounded-full bg-emerald-500/5 blur-3xl" />
-        <div className="absolute -bottom-1/2 -left-1/4 w-[600px] h-[600px] rounded-full bg-teal-500/5 blur-3xl" />
+        <div className="absolute -top-1/2 -right-1/4 w-[800px] h-[800px] rounded-full bg-cyan-500/10 blur-3xl" />
+        <div className="absolute -bottom-1/2 -left-1/4 w-[600px] h-[600px] rounded-full bg-emerald-500/10 blur-3xl" />
       </div>
 
       <div className="w-full max-w-md relative">
         {/* Logo / Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-600 shadow-lg shadow-emerald-900/50 mb-4">
-            <svg
-              className="w-9 h-9 text-white"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
-              <path d="M8 14s1.5 2 4 2 4-2 4-2" />
-              <line x1="9" y1="9" x2="9.01" y2="9" />
-              <line x1="15" y1="9" x2="15.01" y2="9" />
-            </svg>
+          <div className="inline-flex items-center justify-center w-24 h-24 mb-4">
+            <img 
+              src="/patalogo.png" 
+              alt="Logo PodoClinic" 
+              className="w-full h-full object-contain drop-shadow-lg"
+            />
           </div>
           <h1 className="text-3xl font-bold text-white tracking-tight">
             PodoClinic
@@ -161,7 +154,7 @@ export default function LoginPage() {
                           type={showPassword ? "text" : "password"}
                           placeholder="••••••••"
                           autoComplete="current-password"
-                          className="flex h-9 w-full rounded-md border border-slate-600 bg-slate-700/60 px-3 py-1 text-sm text-white shadow-sm placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald-500 pl-9 pr-10"
+                          className="flex h-9 w-full rounded-md border border-slate-600 bg-slate-700/60 px-3 py-1 text-sm text-white shadow-sm placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-cyan-500 pl-9 pr-10"
                           {...register("password")}
                         />
                         <button
@@ -210,7 +203,7 @@ export default function LoginPage() {
 
               <Button
                 type="submit"
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-lg shadow-emerald-900/30 mt-2"
+                className="w-full bg-gradient-to-r from-cyan-600 to-emerald-500 hover:from-cyan-500 hover:to-emerald-400 text-white font-semibold shadow-lg shadow-cyan-900/30 mt-2 border-0"
                 isLoading={isSubmitting}
                 id="login-submit-btn"
               >
@@ -232,7 +225,7 @@ export default function LoginPage() {
               <div className="mt-4 text-center">
                 <Link
                   to="/forgot-password"
-                  className="text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
+                  className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
                 >
                   ¿Olvidaste tu contraseña?
                 </Link>
@@ -249,7 +242,7 @@ export default function LoginPage() {
           href="https://github.com/Javierasalazar1"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center gap-1.5 mt-2 text-[12px] text-slate-600 hover:text-emerald-400 transition-colors duration-200"
+          className="flex items-center justify-center gap-1.5 mt-2 text-[12px] text-slate-600 hover:text-cyan-400 transition-colors duration-200"
         >
           <span>Desarrollado por <span className="font-medium">Javiera S.</span></span>
           <svg height="13" width="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
