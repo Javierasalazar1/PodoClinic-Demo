@@ -105,7 +105,7 @@ Abre: **http://localhost:5173**
 | **Fase 1** | ✅ MVP | Auth completo (JWT + 2FA), CRUD pacientes, formulario consulta (secciones 1-4 y 9), generación básica de PDF |
 | **Fase 2** | ✅ Completado | Secciones 5-8 (exploración, biomecánica, vascular, fotografía), firma digital, PDF completo, envío email |
 | **Fase 3** | ✅ Completado | WhatsApp, auditoría completa, rate limiting avanzado, SMTP personalizado |
-| **Fase 4** | 🔄 Pendiente | PWA offline, tests E2E, Swagger/OpenAPI, CI/CD |
+| **Fase 4** | ✅ Completado | PWA offline, tests E2E, Swagger/OpenAPI, CI/CD |
 
 ---
 
