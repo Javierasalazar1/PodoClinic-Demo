@@ -44,8 +44,6 @@ app.use(
   })
 );
 
-// Serve uploaded files statically
-app.use("/uploads", express.static("uploads"));
 
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());

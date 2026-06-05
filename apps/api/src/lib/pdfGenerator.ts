@@ -5,7 +5,7 @@ import https from "https";
 import http from "http";
 
 /**
- * Descarga una imagen desde una URL local o remota y devuelve el buffer.
+ * Descarga una imagen desde una URL remota (https/http) y devuelve el buffer.
  * Se usa para embeber fotografías clínicas y firmas en el PDF.
  */
 async function fetchImageBuffer(url: string): Promise<Buffer | null> {
@@ -20,16 +20,7 @@ async function fetchImageBuffer(url: string): Promise<Buffer | null> {
         res.on("error", () => resolve(null));
       }).on("error", () => resolve(null));
     } catch {
-      // Ruta local absoluta
-      try {
-        if (fs.existsSync(url)) {
-          resolve(fs.readFileSync(url));
-        } else {
-          resolve(null);
-        }
-      } catch {
-        resolve(null);
-      }
+      resolve(null);
     }
   });
 }
@@ -326,12 +317,12 @@ export async function generateConsultationPdf(consultation: PdfConsultation): Pr
       const x = col === 0 ? margin : margin + imgW + 15;
 
       try {
-        const fileName = path.basename(photo.url);
-        const absPath = path.join(process.cwd(), "uploads", fileName);
-        if (fs.existsSync(absPath)) {
-          doc.image(absPath, x, rowY, { width: imgW, height: imgH, fit: [imgW, imgH] });
+        // Fetch photo from Cloudinary URL (or any public URL)
+        const imgBuffer = await fetchImageBuffer(photo.url);
+        if (imgBuffer) {
+          doc.image(imgBuffer, x, rowY, { width: imgW, height: imgH, fit: [imgW, imgH] });
         } else {
-          throw new Error("No existe");
+          throw new Error("No se pudo descargar la imagen");
         }
       } catch {
         doc.rect(x, rowY, imgW, imgH).fillColor("#EEEEEE").fill();

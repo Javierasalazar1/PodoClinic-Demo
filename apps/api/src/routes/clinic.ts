@@ -7,6 +7,7 @@ import path from "path";
 import fs from "fs";
 import logger from "../lib/logger";
 import { encryptField, decryptField } from "../lib/crypto";
+import cloudinary, { extractPublicId } from "../config/cloudinary";
 
 export const clinicRouter = Router();
 clinicRouter.use(authenticate);
@@ -160,20 +161,32 @@ clinicRouter.post("/logo", upload.single("logo"), async (req: Request, res: Resp
 
   const clinic = await prisma.clinic.findUnique({ where: { id: req.user!.clinic_id } });
   
-  // Delete old logo if exists
+  // Delete old logo if exists in Cloudinary
   if (clinic?.logo_url) {
-    try {
-      const oldFilename = clinic.logo_url.split("/").pop();
-      if (oldFilename) {
-        const oldPath = path.join(process.cwd(), "uploads", oldFilename);
-        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+    const publicId = extractPublicId(clinic.logo_url);
+    if (publicId) {
+      try {
+        await cloudinary.uploader.destroy(publicId);
+      } catch (e) {
+        logger.error("Error deleting old logo from Cloudinary", e instanceof Error ? e : new Error(String(e)));
       }
-    } catch (e) {
-      logger.error("Error deleting old logo", e instanceof Error ? e : new Error(String(e)));
     }
   }
 
-  const logoUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+  // Upload new logo to Cloudinary
+  let logoUrl = "";
+  try {
+    const result = await cloudinary.uploader.upload(req.file.path, {
+      folder: "podoclinic-demo/images",
+    });
+    logoUrl = result.secure_url;
+    // Remove local file
+    fs.unlinkSync(req.file.path);
+  } catch (e) {
+    logger.error("Error uploading logo to Cloudinary", e instanceof Error ? e : new Error(String(e)));
+    res.status(500).json({ error: "Error subiendo el logo a Cloudinary" });
+    return;
+  }
 
   const updated = await prisma.clinic.update({
     where: { id: req.user!.clinic_id },
@@ -205,14 +218,13 @@ clinicRouter.delete("/logo", async (req: Request, res: Response) => {
   const clinic = await prisma.clinic.findUnique({ where: { id: req.user!.clinic_id } });
 
   if (clinic?.logo_url) {
-    try {
-      const oldFilename = clinic.logo_url.split("/").pop();
-      if (oldFilename) {
-        const oldPath = path.join(process.cwd(), "uploads", oldFilename);
-        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+    const publicId = extractPublicId(clinic.logo_url);
+    if (publicId) {
+      try {
+        await cloudinary.uploader.destroy(publicId);
+      } catch (e) {
+        logger.error("Error deleting logo from Cloudinary", e instanceof Error ? e : new Error(String(e)));
       }
-    } catch (e) {
-      logger.error("Error deleting logo", e instanceof Error ? e : new Error(String(e)));
     }
   }
 

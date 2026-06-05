@@ -9,6 +9,7 @@ import nodemailer from "nodemailer";
 import { generateConsultationPdf } from "../lib/pdfGenerator";
 import logger from "../lib/logger";
 import { createTransporter, getFromAddress } from "../lib/mailer";
+import cloudinary, { extractPublicId } from "../config/cloudinary";
 
 export const consultationsRouter = Router();
 consultationsRouter.use(authenticate);
@@ -248,7 +249,18 @@ consultationsRouter.post("/:id/photos", upload.single("photo"), async (req: Requ
       return;
     }
 
-    const photoUrl = `${getBaseUrl()}/uploads/${req.file.filename}`;
+    let photoUrl = "";
+    try {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "podoclinic-demo/images",
+      });
+      photoUrl = result.secure_url;
+      safeDeleteFile();
+    } catch (e) {
+      safeDeleteFile();
+      res.status(500).json({ error: "Error subiendo la foto a Cloudinary", code: "UPLOAD_ERROR" });
+      return;
+    }
 
     const photo = await prisma.consultationPhoto.create({
       data: {
@@ -291,8 +303,7 @@ consultationsRouter.get("/:id/photos/:photoId/download-url", async (req: Request
     return;
   }
 
-  // En producción (Fase 3), aquí se generaría una URL firmada de S3 con s3-request-presigner
-  // Para MVP devolvemos la URL local
+  // Retornamos directamente la secure_url de Cloudinary, es pública y suficiente para la demo.
   res.json({ url: photo.url });
 });
 
@@ -305,6 +316,21 @@ consultationsRouter.delete("/:id/photos/:photoId", async (req: Request, res: Res
   if (!consultation) {
     res.status(404).json({ error: "Consulta no encontrada", code: "NOT_FOUND" });
     return;
+  }
+
+  const photo = await prisma.consultationPhoto.findFirst({
+    where: { id: req.params.photoId as string, consultation_id: consultation.id },
+  });
+
+  if (photo) {
+    const publicId = extractPublicId(photo.url);
+    if (publicId) {
+      try {
+        await cloudinary.uploader.destroy(publicId);
+      } catch (e) {
+        logger.error("Error deleting photo from Cloudinary", e instanceof Error ? e : new Error(String(e)));
+      }
+    }
   }
 
   await prisma.consultationPhoto.delete({
@@ -365,12 +391,24 @@ consultationsRouter.post("/:id/consent", async (req: Request, res: Response) => 
 
   const clinic = await prisma.clinic.findUnique({ where: { id: consultation.clinic_id } });
 
+  let signatureCloudinaryUrl = parsed.data.signature_data_url;
+  try {
+    const uploadResult = await cloudinary.uploader.upload(parsed.data.signature_data_url, {
+      folder: "podoclinic-demo/signatures",
+    });
+    signatureCloudinaryUrl = uploadResult.secure_url;
+  } catch (error) {
+    logger.error("Error uploading signature to Cloudinary", error instanceof Error ? error : new Error(String(error)));
+    res.status(500).json({ error: "Error subiendo la firma a Cloudinary", code: "UPLOAD_ERROR" });
+    return;
+  }
+
   const consent = await prisma.consentRecord.upsert({
     where: { consultation_id: consultation.id },
     update: {
       patient_full_name: parsed.data.patient_signature_name,
       patient_national_id: parsed.data.patient_signature_rut,
-      signature_url: parsed.data.signature_data_url,
+      signature_url: signatureCloudinaryUrl,
       signed_at: new Date(),
       ip_address: req.ip ?? "",
     },
@@ -379,7 +417,7 @@ consultationsRouter.post("/:id/consent", async (req: Request, res: Response) => 
       patient_full_name: parsed.data.patient_signature_name,
       patient_national_id: parsed.data.patient_signature_rut,
       consent_text_snapshot: clinic?.consent_text ?? "Consentimiento estándar",
-      signature_url: parsed.data.signature_data_url,
+      signature_url: signatureCloudinaryUrl,
       signed_at: new Date(),
       ip_address: req.ip ?? "",
     },
@@ -474,8 +512,23 @@ consultationsRouter.post("/:id/generate-pdf", async (req: Request, res: Response
       treatment_plan: consultation.treatment_plan as Record<string, unknown> | null,
     });
 
-    const fileName = path.basename(pdfPath);
-    const pdfUrl = `${getBaseUrl()}/uploads/${fileName}`;
+    let pdfUrl = "";
+    try {
+      const result = await cloudinary.uploader.upload(pdfPath, {
+        folder: "podoclinic-demo/reports",
+        resource_type: "raw",
+      });
+      pdfUrl = result.secure_url;
+      try {
+        fs.unlinkSync(pdfPath); // Cleanup local PDF
+      } catch (e) {
+        // ignore
+      }
+    } catch (e) {
+      logger.error("Error uploading PDF to Cloudinary", e instanceof Error ? e : new Error(String(e)));
+      res.status(500).json({ error: "Error subiendo el PDF a Cloudinary", code: "UPLOAD_ERROR" });
+      return;
+    }
 
     await prisma.consultation.update({
       where: { id: req.params.id as string },
@@ -598,13 +651,27 @@ consultationsRouter.post("/:id/send-email", async (req: Request, res: Response) 
     });
 
     // Guardar URL del PDF generado si aún no estaba guardada
-    const pdfFileName = path.basename(pdfPath);
-    const pdfUrl = `${getBaseUrl()}/uploads/${pdfFileName}`;
-    if (!consultation.report_pdf_url) {
-      await prisma.consultation.update({
-        where: { id: req.params.id as string },
-        data: { report_pdf_url: pdfUrl },
-      });
+    let pdfUrl = consultation.report_pdf_url;
+    if (!pdfUrl) {
+      try {
+        const result = await cloudinary.uploader.upload(pdfPath, {
+          folder: "podoclinic-demo/reports",
+          resource_type: "raw",
+        });
+        pdfUrl = result.secure_url;
+        await prisma.consultation.update({
+          where: { id: req.params.id as string },
+          data: { report_pdf_url: pdfUrl },
+        });
+      } catch (e) {
+        logger.error("Error uploading PDF to Cloudinary", e instanceof Error ? e : new Error(String(e)));
+      }
+    }
+
+    try {
+      fs.unlinkSync(pdfPath); // Cleanup local file
+    } catch (e) {
+      // ignore
     }
 
     // En desarrollo, mostrar URL de preview de Ethereal
@@ -676,12 +743,26 @@ consultationsRouter.post("/:id/share-link", async (req: Request, res: Response) 
         vascular_neurological: consultation.vascular_neurological as Record<string, unknown> | null,
         treatment_plan: consultation.treatment_plan as Record<string, unknown> | null,
       });
-      const fileName = path.basename(pdfPath);
-      pdfUrl = `${getBaseUrl()}/uploads/${fileName}`;
-      await prisma.consultation.update({
-        where: { id: req.params.id as string },
-        data: { report_pdf_url: pdfUrl },
-      });
+      try {
+        const result = await cloudinary.uploader.upload(pdfPath, {
+          folder: "podoclinic-demo/reports",
+          resource_type: "raw",
+        });
+        pdfUrl = result.secure_url;
+        await prisma.consultation.update({
+          where: { id: req.params.id as string },
+          data: { report_pdf_url: pdfUrl },
+        });
+        try {
+          fs.unlinkSync(pdfPath); // Cleanup local
+        } catch (e) {
+          // ignore
+        }
+      } catch (e) {
+        logger.error("Error uploading PDF to Cloudinary in share-link", e instanceof Error ? e : new Error(String(e)));
+        res.status(500).json({ error: "Error subiendo el PDF a Cloudinary", code: "UPLOAD_ERROR" });
+        return;
+      }
     } catch (err) {
       logger.error("PDF generation error for share link", err instanceof Error ? err : new Error(String(err)));
       res.status(500).json({ error: "Error al generar el PDF para compartir", code: "PDF_ERROR" });
@@ -689,8 +770,7 @@ consultationsRouter.post("/:id/share-link", async (req: Request, res: Response) 
     }
   }
 
-  // En producción usaría una URL firmada de S3 con expiración de 72h
-  // En desarrollo, devolvemos la URL local directamente
+  // En la versión Demo, la URL de Cloudinary es pública directamente
   const shareUrl = pdfUrl;
   const patientPhone = (consultation.patient as any).phone?.replace(/[^0-9]/g, "") ?? "";
 
@@ -746,6 +826,23 @@ consultationsRouter.delete("/:id", async (req: Request, res: Response) => {
   if (consultation.status === "FINALIZED") {
     res.status(400).json({ error: "No se puede eliminar una consulta finalizada", code: "BAD_REQUEST" });
     return;
+  }
+
+  // Clean up files from Cloudinary
+  const photos = await prisma.consultationPhoto.findMany({ where: { consultation_id: consultation.id } });
+  const consent = await prisma.consentRecord.findUnique({ where: { consultation_id: consultation.id } });
+
+  for (const photo of photos) {
+    const pid = extractPublicId(photo.url);
+    if (pid) await cloudinary.uploader.destroy(pid).catch(() => {});
+  }
+  if (consent?.signature_url) {
+    const pid = extractPublicId(consent.signature_url);
+    if (pid) await cloudinary.uploader.destroy(pid).catch(() => {});
+  }
+  if (consultation.report_pdf_url) {
+    const pid = extractPublicId(consultation.report_pdf_url);
+    if (pid) await cloudinary.uploader.destroy(pid, { resource_type: "raw" }).catch(() => {});
   }
 
   // Use transaction to ensure complete deletion
