@@ -70,14 +70,9 @@ export default function LoginPage() {
 
       setAuth(res.user, res.accessToken);
       toast.success(`¡Bienvenid@, ${res.user.full_name}!`);
-      
-      const redirectPath = sessionStorage.getItem("redirectPath");
-      if (redirectPath) {
-        sessionStorage.removeItem("redirectPath");
-        navigate(redirectPath, { replace: true });
-      } else {
-        navigate("/dashboard", { replace: true });
-      }
+      // Siempre redirigir al dashboard al iniciar sesión
+      navigate("/dashboard", { replace: true });
+      sessionStorage.removeItem("redirectPath"); // Limpiar cualquier redirect guardado
     } catch (err: unknown) {
       const apiErr = err as { error?: string };
       toast.error(apiErr.error ?? "Error al iniciar sesión");

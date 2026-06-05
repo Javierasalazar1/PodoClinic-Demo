@@ -6,6 +6,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import logger from "../lib/logger";
+import { encryptField, decryptField } from "../lib/crypto";
 
 export const clinicRouter = Router();
 clinicRouter.use(authenticate);
@@ -81,6 +82,9 @@ clinicRouter.patch("/", async (req: Request, res: Response) => {
   const data: Record<string, unknown> = { ...parsed.data };
   if (data.smtp_pass === "" || data.smtp_pass === null) {
     delete data.smtp_pass;
+  } else if (typeof data.smtp_pass === "string" && data.smtp_pass.length > 0) {
+    // Encrypt smtp_pass before storing (AES-256-GCM as per security spec §7.2)
+    data.smtp_pass = encryptField(data.smtp_pass);
   }
 
   const updated = await prisma.clinic.update({
@@ -113,7 +117,16 @@ clinicRouter.post("/smtp/test", async (req: Request, res: Response) => {
 
   const clinic = await prisma.clinic.findUnique({ where: { id: req.user!.clinic_id } });
   if (!clinic?.smtp_host || !clinic?.smtp_user || !clinic?.smtp_pass) {
-    res.status(400).json({ error: "SMTP no configurado", code: "SMTP_NOT_CONFIGURED" });
+    res.status(400).json({ error: "SMTP no configurado. Guarda primero el host, usuario y contraseña SMTP.", code: "SMTP_NOT_CONFIGURED" });
+    return;
+  }
+
+  // Decrypt the stored smtp_pass before using it
+  let decryptedPass: string;
+  try {
+    decryptedPass = decryptField(clinic.smtp_pass);
+  } catch {
+    res.status(500).json({ error: "Error al descifrar la contraseña SMTP almacenada", code: "DECRYPT_ERROR" });
     return;
   }
 
@@ -123,7 +136,7 @@ clinicRouter.post("/smtp/test", async (req: Request, res: Response) => {
       host: clinic.smtp_host,
       port: clinic.smtp_port ?? 587,
       secure: (clinic.smtp_port ?? 587) === 465,
-      auth: { user: clinic.smtp_user, pass: clinic.smtp_pass },
+      auth: { user: clinic.smtp_user, pass: decryptedPass },
     });
     await transporter.verify();
     res.json({ success: true, message: "Conexión SMTP verificada correctamente" });

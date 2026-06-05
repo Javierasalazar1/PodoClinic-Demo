@@ -332,32 +332,29 @@ export default function ConsultationFormPage() {
     }
   }, [draftId]);
 
-  // Restore localStorage draft (only when NOT editing an existing consultation)
+  // Clear localStorage draft on mount when creating a NEW consultation
+  // so previous unsaved data never bleeds into a fresh form
   React.useEffect(() => {
     const editId = searchParams.get("edit");
-    if (editId) return; // Skip localStorage restore when editing a saved draft
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      try {
-        const saved = JSON.parse(raw) as Partial<ConsultationForm>;
-        const currentPatientId = getValues("patient_id");
-        if (currentPatientId && saved.patient_id !== currentPatientId) {
-          return; // Ignore draft for a different patient
-        }
-        Object.entries(saved).forEach(([k, v]) =>
-          setValue(k as keyof ConsultationForm, v as never)
-        );
-      } catch { /* ignore */ }
+    if (!editId) {
+      localStorage.removeItem(STORAGE_KEY);
     }
-  }, [setValue, getValues, searchParams]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Autosave to localStorage every 60s
+  // Restore localStorage draft ONLY for edit mode (already saved to DB)
+  // We NO LONGER restore drafts from localStorage for new consultations
+  // because it caused stale data to appear on subsequent form opens.
+
+  // Autosave to localStorage every 60s (only during an active edit session)
   React.useEffect(() => {
+    const editId = searchParams.get("edit");
+    if (!editId) return; // Don’t autosave new forms to localStorage
     const interval = setInterval(() => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(getValues()));
     }, AUTOSAVE_INTERVAL);
     return () => clearInterval(interval);
-  }, [getValues]);
+  }, [getValues, searchParams]);
 
   const saveDraft = async (): Promise<string | null> => {
     const data = getValues();

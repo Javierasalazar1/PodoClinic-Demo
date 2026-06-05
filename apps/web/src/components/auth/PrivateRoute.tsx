@@ -9,13 +9,15 @@ interface PrivateRouteProps {
 }
 
 export default function PrivateRoute({ children, roles }: PrivateRouteProps) {
-  const { user, accessToken, setAuth, clearAuth } = useAuthStore();
+  const { user, accessToken, isLoggedOut, setAuth, clearAuth } = useAuthStore();
   const location = useLocation();
   const navigate = useNavigate();
-  const [isInitializing, setIsInitializing] = useState(!accessToken);
+  // If the user explicitly logged out, don't try to restore the session
+  const [isInitializing, setIsInitializing] = useState(!accessToken && !isLoggedOut);
 
   useEffect(() => {
-    if (!accessToken) {
+    // Skip refresh if there's already a token or the user explicitly logged out
+    if (!accessToken && !isLoggedOut) {
       const initAuth = async () => {
         try {
           const res = await apiFetch<{ accessToken: string; user: any }>("/auth/refresh", {
@@ -37,7 +39,7 @@ export default function PrivateRoute({ children, roles }: PrivateRouteProps) {
       };
       initAuth();
     }
-  }, [accessToken, setAuth, clearAuth, location, navigate]);
+  }, [accessToken, isLoggedOut, setAuth, clearAuth, location, navigate]);
 
   if (isInitializing) {
     return (

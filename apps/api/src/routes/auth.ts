@@ -10,6 +10,8 @@ import nodemailer from "nodemailer";
 import prisma from "../lib/prisma";
 import { authenticate } from "../middleware/auth";
 import logger from "../lib/logger";
+import { encryptField, decryptField } from "../lib/crypto";
+import { createTransporter, getFromAddress } from "../lib/mailer";
 
 export const authRouter = Router();
 
@@ -218,29 +220,42 @@ authRouter.post("/refresh", async (req: Request, res: Response) => {
 });
 
 /** POST /auth/logout */
-authRouter.post("/logout", authenticate, async (req: Request, res: Response) => {
+authRouter.post("/logout", async (req: Request, res: Response) => {
   const refreshToken = req.cookies?.refreshToken;
   if (refreshToken) {
     const hash = crypto.createHash("sha256").update(refreshToken).digest("hex");
     await prisma.refreshToken.updateMany({ where: { token_hash: hash }, data: { revoked: true } }).catch(() => {});
   }
-  if (req.user) {
-    await prisma.auditLog.create({
-      data: {
-        user_id: req.user.sub,
-        clinic_id: req.user.clinic_id,
-        action: "LOGOUT",
-        ip_address: req.ip ?? "",
-        user_agent: req.headers["user-agent"] ?? "",
-      },
-    }).catch(() => {});
+
+  // Try to extract user info from the access token for audit logging,
+  // but don't block logout if the token is missing or expired
+  try {
+    const authHeader = req.headers.authorization;
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.slice(7);
+      // Decode without verifying expiry so we can still log the event
+      const payload = jwt.decode(token) as { sub?: string; clinic_id?: string } | null;
+      if (payload?.sub && payload?.clinic_id) {
+        await prisma.auditLog.create({
+          data: {
+            user_id: payload.sub,
+            clinic_id: payload.clinic_id,
+            action: "LOGOUT",
+            ip_address: req.ip ?? "",
+            user_agent: req.headers["user-agent"] ?? "",
+          },
+        }).catch(() => {});
+      }
+    }
+  } catch {
+    // Ignore any errors — logout must always succeed
   }
 
   res.cookie("refreshToken", "", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    expires: new Date(0), // Expire immediately
+    expires: new Date(0),
   });
 
   res.json({ message: "Sesión cerrada" });
@@ -345,23 +360,7 @@ authRouter.post("/forgot-password", async (req: Request, res: Response) => {
 
   const clinic = await prisma.clinic.findUnique({ where: { id: user.clinic_id } });
   
-  let transporter: nodemailer.Transporter;
-  if (clinic?.smtp_host && clinic?.smtp_user && clinic?.smtp_pass) {
-    transporter = nodemailer.createTransport({
-      host: clinic.smtp_host,
-      port: clinic.smtp_port ?? 587,
-      secure: (clinic.smtp_port ?? 587) === 465,
-      auth: { user: clinic.smtp_user, pass: clinic.smtp_pass },
-    });
-  } else {
-    const testAccount = await nodemailer.createTestAccount();
-    transporter = nodemailer.createTransport({
-      host: "smtp.ethereal.email",
-      port: 587,
-      secure: false,
-      auth: { user: testAccount.user, pass: testAccount.pass },
-    });
-  }
+  const transporter = await createTransporter(clinic);
 
   const resetUrl = `http://localhost:5173/reset-password?token=${rawToken}`;
   const clinicName = clinic?.name ?? "PodoClinic";
@@ -583,28 +582,12 @@ authRouter.post("/change-email", authenticate, async (req: Request, res: Respons
 
   // Enviar email de verificación al nuevo correo
   const clinic = await prisma.clinic.findUnique({ where: { id: user.clinic_id } });
-  let transporter;
-  if (clinic?.smtp_host && clinic?.smtp_user && clinic?.smtp_pass) {
-    transporter = nodemailer.createTransport({
-      host: clinic.smtp_host,
-      port: clinic.smtp_port ?? 587,
-      secure: (clinic.smtp_port ?? 587) === 465,
-      auth: { user: clinic.smtp_user, pass: clinic.smtp_pass },
-    });
-  } else {
-    const testAccount = await nodemailer.createTestAccount();
-    transporter = nodemailer.createTransport({
-      host: "smtp.ethereal.email",
-      port: 587,
-      secure: false,
-      auth: { user: testAccount.user, pass: testAccount.pass },
-    });
-  }
+  const transporter = await createTransporter(clinic);
 
   const verifyUrl = `${req.protocol}://${req.get("host")}/api/v1/auth/verify-email-change/${rawToken}`;
   
   const mailOptions = {
-    from: `"PodoClinic Sistema" <${clinic?.smtp_user || "noreply@podoclinic.local"}>`,
+    from: getFromAddress(clinic, "PodoClinic Soporte"),
     to: newEmail,
     subject: "Verifica tu nuevo correo electrónico - PodoClinic",
     html: `
@@ -668,26 +651,10 @@ authRouter.get("/verify-email-change/:token", async (req: Request, res: Response
 
   // Enviar notificación al correo anterior
   const clinic = await prisma.clinic.findUnique({ where: { id: user.clinic_id } });
-  let transporter;
-  if (clinic?.smtp_host && clinic?.smtp_user && clinic?.smtp_pass) {
-    transporter = nodemailer.createTransport({
-      host: clinic.smtp_host,
-      port: clinic.smtp_port ?? 587,
-      secure: (clinic.smtp_port ?? 587) === 465,
-      auth: { user: clinic.smtp_user, pass: clinic.smtp_pass },
-    });
-  } else {
-    const testAccount = await nodemailer.createTestAccount();
-    transporter = nodemailer.createTransport({
-      host: "smtp.ethereal.email",
-      port: 587,
-      secure: false,
-      auth: { user: testAccount.user, pass: testAccount.pass },
-    });
-  }
+  const transporter = await createTransporter(clinic);
 
   const mailOptions = {
-    from: `"PodoClinic Sistema" <${clinic?.smtp_user || "noreply@podoclinic.local"}>`,
+    from: getFromAddress(clinic, "PodoClinic Sistema"),
     to: oldEmail,
     subject: "Aviso de seguridad: Tu correo ha sido cambiado",
     html: `
@@ -706,23 +673,4 @@ authRouter.get("/verify-email-change/:token", async (req: Request, res: Response
   res.redirect("http://localhost:5173/login?emailChanged=true");
 });
 
-// AES-256-GCM helpers
-function encryptField(text: string): string {
-  const key = Buffer.from(process.env.ENCRYPTION_KEY!, "hex");
-  const iv = crypto.randomBytes(12);
-  const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
-  const encrypted = Buffer.concat([cipher.update(text, "utf8"), cipher.final()]);
-  const tag = cipher.getAuthTag();
-  return Buffer.concat([iv, tag, encrypted]).toString("base64");
-}
 
-function decryptField(encoded: string): string {
-  const data = Buffer.from(encoded, "base64");
-  const key = Buffer.from(process.env.ENCRYPTION_KEY!, "hex");
-  const iv = data.subarray(0, 12);
-  const tag = data.subarray(12, 28);
-  const encrypted = data.subarray(28);
-  const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
-  decipher.setAuthTag(tag);
-  return decipher.update(encrypted) + decipher.final("utf8");
-}

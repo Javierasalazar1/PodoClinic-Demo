@@ -271,10 +271,34 @@ export default function SettingsPage() {
   };
 
   const handleTestSmtp = async () => {
+    // Validate that SMTP fields are filled before attempting test
+    if (!smtpForm.smtp_host || !smtpForm.smtp_user) {
+      toast.error("Completa el host y usuario SMTP antes de probar la conexión");
+      return;
+    }
+    if (!smtpForm.smtp_pass && !clinic?.smtp_configured) {
+      toast.error("Ingresa la contraseña SMTP (API Key de Brevo) antes de probar");
+      return;
+    }
+
     setTestingSmtp(true);
     try {
+      // First, save the current SMTP config to the DB so the test endpoint can read it
+      await apiFetch<ClinicSettings>("/clinic", {
+        method: "PATCH",
+        body: JSON.stringify({
+          smtp_host: smtpForm.smtp_host,
+          smtp_port: smtpForm.smtp_port ? parseInt(smtpForm.smtp_port) : 587,
+          smtp_user: smtpForm.smtp_user,
+          ...(smtpForm.smtp_pass ? { smtp_pass: smtpForm.smtp_pass } : {}),
+        }),
+      });
+
+      // Then run the test
       await apiFetch("/clinic/smtp/test", { method: "POST" });
       toast.success("✅ Conexión SMTP verificada correctamente");
+      // Mark smtp as configured now that the test passed
+      setClinic((prev) => prev ? { ...prev, smtp_configured: true } : null);
     } catch (e: any) {
       toast.error(e.error || "Error al probar la conexión SMTP");
     } finally {

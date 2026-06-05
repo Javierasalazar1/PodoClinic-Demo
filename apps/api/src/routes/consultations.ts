@@ -8,6 +8,7 @@ import path from "path";
 import nodemailer from "nodemailer";
 import { generateConsultationPdf } from "../lib/pdfGenerator";
 import logger from "../lib/logger";
+import { createTransporter, getFromAddress } from "../lib/mailer";
 
 export const consultationsRouter = Router();
 consultationsRouter.use(authenticate);
@@ -556,25 +557,7 @@ consultationsRouter.post("/:id/send-email", async (req: Request, res: Response) 
 
   // Configurar transporte Nodemailer
   // Si la clínica tiene SMTP configurado se usa; si no, se usa Ethereal (test) en desarrollo
-  let transporter: nodemailer.Transporter;
-
-  if (clinic?.smtp_host && clinic?.smtp_user && clinic?.smtp_pass) {
-    transporter = nodemailer.createTransport({
-      host: clinic.smtp_host,
-      port: clinic.smtp_port ?? 587,
-      secure: (clinic.smtp_port ?? 587) === 465,
-      auth: { user: clinic.smtp_user, pass: clinic.smtp_pass },
-    });
-  } else {
-    // En desarrollo: Ethereal Mail (preview en https://ethereal.email/)
-    const testAccount = await nodemailer.createTestAccount();
-    transporter = nodemailer.createTransport({
-      host: "smtp.ethereal.email",
-      port: 587,
-      secure: false,
-      auth: { user: testAccount.user, pass: testAccount.pass },
-    });
-  }
+  const transporter = await createTransporter(clinic);
 
   const clinicName = clinic?.name ?? "PodoClinic";
   const dateStr = new Date(consultation.consultation_date).toLocaleDateString("es-CL", {
@@ -585,7 +568,7 @@ consultationsRouter.post("/:id/send-email", async (req: Request, res: Response) 
     const safeName = (consultation.patient.full_name || "Paciente").replace(/\s+/g, "_");
     const safeDate = dateStr.replace(/[\s,]/g, "_");
     const info = await transporter.sendMail({
-      from: `"${clinicName}" <${clinic?.smtp_user ?? "podoclinic@example.com"}>`,
+      from: getFromAddress(clinic, clinicName),
       to: parsed.data.to_email,
       subject: `Informe Clínico Podológico — ${consultation.patient.full_name} — ${dateStr}`,
       html: `

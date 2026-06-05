@@ -15,6 +15,7 @@ export interface AuthUser {
 interface AuthState {
   user: AuthUser | null;
   accessToken: string | null;
+  isLoggedOut: boolean;
   setAuth: (user: AuthUser, accessToken: string) => void;
   clearAuth: () => void;
   setAccessToken: (token: string) => void;
@@ -25,13 +26,14 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       accessToken: null,
+      isLoggedOut: false,
       setAuth: (user, accessToken) => {
         sessionStorage.setItem("access_token", accessToken);
-        set({ user, accessToken });
+        set({ user, accessToken, isLoggedOut: false });
       },
       clearAuth: () => {
         sessionStorage.removeItem("access_token");
-        set({ user: null, accessToken: null });
+        set({ user: null, accessToken: null, isLoggedOut: true });
       },
       setAccessToken: (token) => {
         sessionStorage.setItem("access_token", token);

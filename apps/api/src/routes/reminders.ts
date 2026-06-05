@@ -3,6 +3,7 @@ import { z } from "zod";
 import prisma from "../lib/prisma";
 import { authenticate } from "../middleware/auth";
 import * as nodemailer from "nodemailer";
+import { createTransporter, getFromAddress } from "../lib/mailer";
 
 export const remindersRouter = Router();
 remindersRouter.use(authenticate);
@@ -160,26 +161,10 @@ remindersRouter.post("/:patientId/send-email", async (req: Request, res: Respons
 
   const clinic = await prisma.clinic.findUnique({ where: { id: req.user!.clinic_id } });
   
-  let transporter;
-  if (clinic?.smtp_host && clinic?.smtp_user && clinic?.smtp_pass) {
-    transporter = nodemailer.createTransport({
-      host: clinic.smtp_host,
-      port: clinic.smtp_port ?? 587,
-      secure: (clinic.smtp_port ?? 587) === 465,
-      auth: { user: clinic.smtp_user, pass: clinic.smtp_pass },
-    });
-  } else {
-    const testAccount = await nodemailer.createTestAccount();
-    transporter = nodemailer.createTransport({
-      host: "smtp.ethereal.email",
-      port: 587,
-      secure: false,
-      auth: { user: testAccount.user, pass: testAccount.pass },
-    });
-  }
+  const transporter = await createTransporter(clinic);
 
   await transporter.sendMail({
-    from: `"${clinic?.name || 'PodoClinic'}" <${clinic?.smtp_user || 'noreply@podoclinic.local'}>`,
+    from: getFromAddress(clinic, clinic?.name || 'PodoClinic'),
     to: patient.email,
     subject: subject || "Recordatorio de cita",
     text: message,

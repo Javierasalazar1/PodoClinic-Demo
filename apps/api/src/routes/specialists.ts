@@ -6,6 +6,7 @@ import bcrypt from "bcrypt";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
 import logger from "../lib/logger";
+import { createTransporter, getFromAddress } from "../lib/mailer";
 
 export const specialistsRouter = Router();
 
@@ -111,23 +112,7 @@ specialistsRouter.post("/", async (req: Request, res: Response) => {
   // Send email
   const clinic = await prisma.clinic.findUnique({ where: { id: req.user!.clinic_id } });
   
-  let transporter: nodemailer.Transporter;
-  if (clinic?.smtp_host && clinic?.smtp_user && clinic?.smtp_pass) {
-    transporter = nodemailer.createTransport({
-      host: clinic.smtp_host,
-      port: clinic.smtp_port ?? 587,
-      secure: (clinic.smtp_port ?? 587) === 465,
-      auth: { user: clinic.smtp_user, pass: clinic.smtp_pass },
-    });
-  } else {
-    const testAccount = await nodemailer.createTestAccount();
-    transporter = nodemailer.createTransport({
-      host: "smtp.ethereal.email",
-      port: 587,
-      secure: false,
-      auth: { user: testAccount.user, pass: testAccount.pass },
-    });
-  }
+  const transporter = await createTransporter(clinic);
 
   const resetUrl = `http://localhost:5173/reset-password?token=${rawToken}`;
   const clinicName = clinic?.name ?? "PodoClinic";
@@ -135,7 +120,7 @@ specialistsRouter.post("/", async (req: Request, res: Response) => {
   let previewUrl = "";
   try {
     const info = await transporter.sendMail({
-      from: `"${clinicName}" <${clinic?.smtp_user ?? "no-reply@podoclinic.com"}>`,
+      from: getFromAddress(clinic, clinicName),
       to: email,
       subject: `Bienvenido a ${clinicName} - Configura tu cuenta`,
       html: `
