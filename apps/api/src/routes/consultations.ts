@@ -516,7 +516,7 @@ consultationsRouter.post("/:id/generate-pdf", async (req: Request, res: Response
     try {
       const result = await cloudinary.uploader.upload(pdfPath, {
         folder: "podoclinic-demo/reports",
-        resource_type: "raw",
+        resource_type: "image",
       });
       pdfUrl = result.secure_url;
       try {
@@ -656,7 +656,7 @@ consultationsRouter.post("/:id/send-email", async (req: Request, res: Response) 
       try {
         const result = await cloudinary.uploader.upload(pdfPath, {
           folder: "podoclinic-demo/reports",
-          resource_type: "raw",
+          resource_type: "image",
         });
         pdfUrl = result.secure_url;
         await prisma.consultation.update({
@@ -746,7 +746,7 @@ consultationsRouter.post("/:id/share-link", async (req: Request, res: Response) 
       try {
         const result = await cloudinary.uploader.upload(pdfPath, {
           folder: "podoclinic-demo/reports",
-          resource_type: "raw",
+          resource_type: "image",
         });
         pdfUrl = result.secure_url;
         await prisma.consultation.update({
@@ -842,7 +842,7 @@ consultationsRouter.delete("/:id", async (req: Request, res: Response) => {
   }
   if (consultation.report_pdf_url) {
     const pid = extractPublicId(consultation.report_pdf_url);
-    if (pid) await cloudinary.uploader.destroy(pid, { resource_type: "raw" }).catch(() => {});
+    if (pid) await cloudinary.uploader.destroy(pid, { resource_type: "image" }).catch(() => {});
   }
 
   // Use transaction to ensure complete deletion
