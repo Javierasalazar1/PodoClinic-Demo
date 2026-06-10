@@ -69,6 +69,8 @@ model User {
   password_reset_tokens PasswordResetToken[]
   email_change_tokens   EmailChangeToken[]
   audit_logs           AuditLog[]
+
+  @@index([clinic_id])
 }
 
 model Patient {
@@ -91,6 +93,10 @@ model Patient {
   created_at              DateTime       @default(now())
   updated_at              DateTime       @updatedAt
   consultations           Consultation[]
+
+  @@index([clinic_id])
+  @@index([national_id])
+  @@index([archived_at])
 }
 
 model Consultation {
@@ -117,6 +123,11 @@ model Consultation {
   specialist User           @relation("SpecialistConsultations", fields: [specialist_id], references: [id])
   photos    ConsultationPhoto[]
   consent   ConsentRecord?
+
+  @@index([clinic_id])
+  @@index([patient_id])
+  @@index([specialist_id])
+  @@index([consultation_date(sort: Desc)])
 }
 
 model ConsultationPhoto {
@@ -128,6 +139,8 @@ model ConsultationPhoto {
   order_index     Int
   created_at      DateTime     @default(now())
   consultation    Consultation @relation(fields: [consultation_id], references: [id])
+
+  @@index([consultation_id])
 }
 
 model ConsentRecord {
@@ -153,6 +166,9 @@ model AuditLog {
   user_agent    String
   created_at    DateTime @default(now())
   user          User?    @relation(fields: [user_id], references: [id])
+
+  @@index([clinic_id])
+  @@index([user_id])
 }
 
 model RefreshToken {
@@ -163,6 +179,8 @@ model RefreshToken {
   revoked    Boolean  @default(false)
   created_at DateTime @default(now())
   user       User     @relation(fields: [user_id], references: [id])
+
+  @@index([user_id])
 }
 
 model PasswordResetToken {
@@ -173,6 +191,8 @@ model PasswordResetToken {
   used_at    DateTime?
   created_at DateTime  @default(now())
   user       User      @relation(fields: [user_id], references: [id])
+
+  @@index([user_id])
 }
 
 model EmailChangeToken {
@@ -184,4 +204,6 @@ model EmailChangeToken {
   used_at    DateTime?
   created_at DateTime  @default(now())
   user       User      @relation(fields: [user_id], references: [id])
+
+  @@index([user_id])
 }
