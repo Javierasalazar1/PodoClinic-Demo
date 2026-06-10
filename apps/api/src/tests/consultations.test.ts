@@ -36,7 +36,7 @@ test("Consultation workflow: create draft -> save consent -> finalize", async (t
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      email: process.env.TEST_ADMIN_EMAIL || "admin@podoclinic-demo.cl",
+      email: process.env.TEST_ADMIN_EMAIL || "admin@Podelyx-demo.cl",
       password: process.env.TEST_ADMIN_PASSWORD || ""
     })
   });

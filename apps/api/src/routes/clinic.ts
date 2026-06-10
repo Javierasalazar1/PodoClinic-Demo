@@ -177,7 +177,7 @@ clinicRouter.post("/logo", upload.single("logo"), async (req: Request, res: Resp
   let logoUrl = "";
   try {
     const result = await cloudinary.uploader.upload(req.file.path, {
-      folder: "podoclinic-demo/images",
+      folder: "Podelyx-demo/images",
     });
     logoUrl = result.secure_url;
     // Remove local file

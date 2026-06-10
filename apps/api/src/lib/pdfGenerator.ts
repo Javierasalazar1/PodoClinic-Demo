@@ -171,7 +171,7 @@ export async function generateConsultationPdf(consultation: PdfConsultation): Pr
     info: {
       Title: `Informe Clínico Podológico — ${consultation.patient.full_name}`,
       Author: consultation.specialist.full_name,
-      Creator: "PodoClinic",
+      Creator: "Podelyx",
     },
   });
 
@@ -183,7 +183,7 @@ export async function generateConsultationPdf(consultation: PdfConsultation): Pr
   const contentW = pageW - margin * 2;
 
   // ─── HEADER ──────────────────────────────────────────────────────────────
-  const clinicName = consultation.clinic?.name ?? "PodoClinic";
+  const clinicName = consultation.clinic?.name ?? "Podelyx";
   let hasLogo = false;
 
   if (consultation.clinic?.logo_url) {
@@ -355,7 +355,7 @@ export async function generateConsultationPdf(consultation: PdfConsultation): Pr
     if (doc.y + 150 > doc.page.height - 50) doc.addPage();
     sectionTitle(doc, "CONSENTIMIENTO INFORMADO", margin, accent, contentW);
 
-    const consentText = consultation.consent.consent_text_snapshot || "Consentimiento estándar PodoClinic";
+    const consentText = consultation.consent.consent_text_snapshot || "Consentimiento estándar Podelyx";
     doc.x = margin;
     doc.font("Helvetica").fontSize(9).fillColor("#555555").text(consentText, { align: "justify", width: contentW });
     doc.moveDown(1.5);
@@ -415,7 +415,7 @@ export async function generateConsultationPdf(consultation: PdfConsultation): Pr
     doc.moveTo(margin, footerY - 5).lineTo(pageW - margin, footerY - 5).strokeColor(BORDER_GRAY).lineWidth(0.5).stroke();
     
     doc.font("Helvetica").fontSize(7.5).fillColor("#AAAAAA").text(
-      `${clinicName} · Documento generado electrónicamente — PodoClinic`,
+      `${clinicName} · Documento generado electrónicamente — Podelyx`,
       margin, footerY, { width: contentW - 60, align: "left", lineBreak: false }
     );
     doc.font("Helvetica").fontSize(7.5).fillColor("#AAAAAA").text(

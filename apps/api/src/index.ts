@@ -99,7 +99,7 @@ app.use(errorHandler);
 
 if (process.env.NODE_ENV !== "test") {
   app.listen(port, () => {
-    logger.info(`PodoClinic API running on port ${port}`);
+    logger.info(`Podelyx API running on port ${port}`);
     if (process.env.DEMO_MODE === "true") {
       logger.info("[DEMO] 🎭 Modo demo activo — datos se reinician automáticamente cada 24h");
       startDemoResetJob();

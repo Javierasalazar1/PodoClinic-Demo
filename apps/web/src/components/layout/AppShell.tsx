@@ -93,8 +93,8 @@ export default function AppShell() {
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <p className="text-white font-bold text-base leading-tight truncate w-full" title={clinic?.name ?? "PodoClinic"}>
-              {clinic?.name ?? "PodoClinic"}
+            <p className="text-white font-bold text-base leading-tight truncate w-full" title={clinic?.name ?? "Podelyx"}>
+              {clinic?.name ?? "Podelyx"}
             </p>
             <p className="text-slate-500 text-xs truncate w-full">Sistema Clínico</p>
           </div>
@@ -178,7 +178,7 @@ export default function AppShell() {
           >
             {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
-          <span className="font-bold text-slate-800 dark:text-white">PodoClinic</span>
+          <span className="font-bold text-slate-800 dark:text-white">Podelyx</span>
         </header>
 
         {/* Page outlet */}

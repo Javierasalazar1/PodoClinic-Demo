@@ -87,7 +87,7 @@ authRouter.post("/login", async (req: Request, res: Response) => {
     // 2FA check — omitido para usuario demo en modo demo
     const isDemoUser =
       process.env.DEMO_MODE === "true" &&
-      email === (process.env.DEMO_USER_EMAIL ?? "demo@podoclinic.cl");
+      email === (process.env.DEMO_USER_EMAIL ?? "demo@Podelyx.cl");
 
     if (!isDemoUser && user.totp_enabled && user.totp_secret) {
       if (!totp_code) {
@@ -270,7 +270,7 @@ authRouter.post("/2fa/setup", authenticate, async (req: Request, res: Response) 
   const user = await prisma.user.findUnique({ where: { id: req.user!.sub } });
   if (!user) { res.status(404).json({ error: "Usuario no encontrado", code: "NOT_FOUND" }); return; }
 
-  const secret = speakeasy.generateSecret({ name: `PodoClinic (${user.email})`, length: 20 });
+  const secret = speakeasy.generateSecret({ name: `Podelyx (${user.email})`, length: 20 });
   const encrypted = encryptField(secret.base32);
   await prisma.user.update({ where: { id: user.id }, data: { totp_secret: encrypted, totp_enabled: false } });
 
@@ -386,12 +386,12 @@ authRouter.post("/forgot-password", async (req: Request, res: Response) => {
   const transporter = await createTransporter(clinic);
 
   const resetUrl = `http://localhost:5173/reset-password?token=${rawToken}`;
-  const clinicName = clinic?.name ?? "PodoClinic";
+  const clinicName = clinic?.name ?? "Podelyx";
 
   let previewUrl = "";
   try {
     const info = await transporter.sendMail({
-      from: `"${clinicName}" <${clinic?.smtp_user ?? "no-reply@podoclinic.com"}>`,
+      from: `"${clinicName}" <${clinic?.smtp_user ?? "no-reply@Podelyx.com"}>`,
       to: email,
       subject: "Recuperación de contraseña",
       html: `<p>Hola ${user.full_name},</p><p>Has solicitado recuperar tu contraseña. Haz clic en el enlace para restablecerla:</p><p><a href="${resetUrl}">${resetUrl}</a></p><p>Este enlace expirará en 1 hora.</p>`,
@@ -620,12 +620,12 @@ authRouter.post("/change-email", authenticate, async (req: Request, res: Respons
   const verifyUrl = `${req.protocol}://${req.get("host")}/api/v1/auth/verify-email-change/${rawToken}`;
   
   const mailOptions = {
-    from: getFromAddress(clinic, "PodoClinic Soporte"),
+    from: getFromAddress(clinic, "Podelyx Soporte"),
     to: newEmail,
-    subject: "Verifica tu nuevo correo electrónico - PodoClinic",
+    subject: "Verifica tu nuevo correo electrónico - Podelyx",
     html: `
       <h2>Hola ${user.full_name},</h2>
-      <p>Has solicitado cambiar tu correo electrónico en PodoClinic a esta dirección.</p>
+      <p>Has solicitado cambiar tu correo electrónico en Podelyx a esta dirección.</p>
       <p>Para confirmar y aplicar el cambio, haz clic en el siguiente enlace. Este enlace expira en 24 horas.</p>
       <a href="${verifyUrl}" style="display:inline-block;padding:10px 20px;background:#0F6E56;color:#fff;text-decoration:none;border-radius:5px;">Verificar correo electrónico</a>
       <p>Si no fuiste tú, ignora este mensaje.</p>
@@ -687,13 +687,13 @@ authRouter.get("/verify-email-change/:token", async (req: Request, res: Response
   const transporter = await createTransporter(clinic);
 
   const mailOptions = {
-    from: getFromAddress(clinic, "PodoClinic Sistema"),
+    from: getFromAddress(clinic, "Podelyx Sistema"),
     to: oldEmail,
     subject: "Aviso de seguridad: Tu correo ha sido cambiado",
     html: `
       <h2>Aviso de seguridad importante</h2>
       <p>Hola ${user.full_name},</p>
-      <p>Te informamos que tu correo electrónico de acceso a PodoClinic ha sido modificado exitosamente.</p>
+      <p>Te informamos que tu correo electrónico de acceso a Podelyx ha sido modificado exitosamente.</p>
       <p>Nuevo correo: <strong>${newEmail}</strong></p>
       <p>Si tú no realizaste este cambio, por favor contacta al administrador del sistema inmediatamente.</p>
     `,

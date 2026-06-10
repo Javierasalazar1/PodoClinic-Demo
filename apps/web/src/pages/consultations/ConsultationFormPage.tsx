@@ -18,7 +18,7 @@ import SignaturePad from "@/components/consultation/SignaturePad";
 import PhotoUpload from "@/components/consultation/PhotoUpload";
 import type { PhotoItem } from "@/components/consultation/PhotoUpload";
 
-const STORAGE_KEY = "podoclinic_draft_consultation";
+const STORAGE_KEY = "Podelyx_draft_consultation";
 const AUTOSAVE_INTERVAL = 60_000;
 
 const radioBoolean = z.preprocess((val) => {

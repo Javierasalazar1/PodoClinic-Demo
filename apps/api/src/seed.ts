@@ -18,9 +18,9 @@ async function main() {
       name: "Clínica Podológica Demo",
       address: "Av. Providencia 1234, Santiago",
       phone: "+56 2 1234 5678",
-      email: "contacto@podoclinic-demo.cl",
+      email: "contacto@Podelyx-demo.cl",
       primary_color: "#0F6E56",
-      consent_text: `CONSENTIMIENTO INFORMADO\n\nYo, el/la paciente, declaro haber sido informado/a sobre los procedimientos podológicos a realizar, sus riesgos y beneficios. Autorizo voluntariamente la realización del tratamiento podológico y el registro de mis datos clínicos en el sistema PodoClinic.\n\nLos datos personales serán tratados con absoluta confidencialidad conforme a la Ley 19.628 de protección de datos personales de Chile.`,
+      consent_text: `CONSENTIMIENTO INFORMADO\n\nYo, el/la paciente, declaro haber sido informado/a sobre los procedimientos podológicos a realizar, sus riesgos y beneficios. Autorizo voluntariamente la realización del tratamiento podológico y el registro de mis datos clínicos en el sistema Podelyx.\n\nLos datos personales serán tratados con absoluta confidencialidad conforme a la Ley 19.628 de protección de datos personales de Chile.`,
     },
   });
   console.log(`✅ Clínica creada: ${clinic.name}`);
@@ -28,13 +28,13 @@ async function main() {
   // Crear usuario administrador
   const passwordHash = await bcrypt.hash("Admin1234!", 12);
   const admin = await prisma.user.upsert({
-    where: { email: "admin@podoclinic-demo.cl" },
+    where: { email: "admin@Podelyx-demo.cl" },
     update: {},
     create: {
       clinic_id: clinic.id,
       role: "ADMIN",
-      full_name: "Administrador PodoClinic",
-      email: "admin@podoclinic-demo.cl",
+      full_name: "Administrador Podelyx",
+      email: "admin@Podelyx-demo.cl",
       password_hash: passwordHash,
       totp_enabled: false,
       is_active: true,
@@ -45,7 +45,7 @@ async function main() {
   // Crear especialista demo
   const specialistHash = await bcrypt.hash("Specialist1234!", 12);
   const specialist = await prisma.user.upsert({
-    where: { email: "especialista@podoclinic-demo.cl" },
+    where: { email: "especialista@Podelyx-demo.cl" },
     update: {},
     create: {
       clinic_id: clinic.id,
@@ -53,7 +53,7 @@ async function main() {
       full_name: "Dr. Ana González",
       professional_title: "Podóloga Clínica",
       license_number: "POD-12345",
-      email: "especialista@podoclinic-demo.cl",
+      email: "especialista@Podelyx-demo.cl",
       password_hash: specialistHash,
       totp_enabled: false,
       is_active: true,
@@ -102,8 +102,8 @@ async function main() {
 
   console.log("\n🎉 Seed completado exitosamente!");
   console.log("\n📋 Credenciales de acceso:");
-  console.log("   Admin:       admin@podoclinic-demo.cl / Admin1234!");
-  console.log("   Especialista: especialista@podoclinic-demo.cl / Specialist1234!");
+  console.log("   Admin:       admin@Podelyx-demo.cl / Admin1234!");
+  console.log("   Especialista: especialista@Podelyx-demo.cl / Specialist1234!");
 }
 
 main()

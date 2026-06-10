@@ -115,7 +115,7 @@ specialistsRouter.post("/", async (req: Request, res: Response) => {
   const transporter = await createTransporter(clinic);
 
   const resetUrl = `http://localhost:5173/reset-password?token=${rawToken}`;
-  const clinicName = clinic?.name ?? "PodoClinic";
+  const clinicName = clinic?.name ?? "Podelyx";
 
   let previewUrl = "";
   try {

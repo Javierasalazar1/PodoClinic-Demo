@@ -24,7 +24,7 @@ export default function RemindersPage() {
   const [patients, setPatients] = useState<ReminderPatient[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"7" | "15" | "30" | "overdue">("7");
-  const [clinicName, setClinicName] = useState("PodoClinic");
+  const [clinicName, setClinicName] = useState("Podelyx");
 
   // Modals state
   const [whatsappPatient, setWhatsappPatient] = useState<ReminderPatient | null>(null);

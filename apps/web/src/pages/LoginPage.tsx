@@ -55,7 +55,7 @@ export default function LoginPage() {
   } = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
 
   const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === "true";
-  const DEMO_EMAIL = import.meta.env.VITE_DEMO_EMAIL || "demo@podoclinic.cl";
+  const DEMO_EMAIL = import.meta.env.VITE_DEMO_EMAIL || "demo@Podelyx.cl";
   const DEMO_PASSWORD = import.meta.env.VITE_DEMO_PASSWORD || "Demo1234!";
 
   const fillDemoCredentials = () => {
@@ -103,12 +103,12 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center w-24 h-24 mb-4">
             <img 
               src="/patalogo.png" 
-              alt="Logo PodoClinic" 
+              alt="Logo Podelyx" 
               className="w-full h-full object-contain drop-shadow-lg"
             />
           </div>
           <h1 className="text-3xl font-bold text-white tracking-tight">
-            PodoClinic
+            Podelyx
           </h1>
           <p className="text-slate-400 mt-1 text-sm">
             Sistema de Historial Clínico Podológico
@@ -291,7 +291,7 @@ export default function LoginPage() {
         </Card>
 
         <p className="text-center text-slate-600 text-xs mt-6">
-          © {new Date().getFullYear()} PodoClinic — Sistema de gestión podológica
+          © {new Date().getFullYear()} Podelyx — Sistema de gestión podológica
         </p>
 
         <a

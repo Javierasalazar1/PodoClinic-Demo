@@ -257,7 +257,7 @@ consultationsRouter.post("/:id/photos", upload.single("photo"), async (req: Requ
     let photoUrl = "";
     try {
       const result = await cloudinary.uploader.upload(req.file.path, {
-        folder: "podoclinic-demo/images",
+        folder: "Podelyx-demo/images",
       });
       photoUrl = result.secure_url;
       safeDeleteFile();
@@ -399,7 +399,7 @@ consultationsRouter.post("/:id/consent", async (req: Request, res: Response) => 
   let signatureCloudinaryUrl = parsed.data.signature_data_url;
   try {
     const uploadResult = await cloudinary.uploader.upload(parsed.data.signature_data_url, {
-      folder: "podoclinic-demo/signatures",
+      folder: "Podelyx-demo/signatures",
     });
     signatureCloudinaryUrl = uploadResult.secure_url;
   } catch (error) {
@@ -520,7 +520,7 @@ consultationsRouter.post("/:id/generate-pdf", async (req: Request, res: Response
     let pdfUrl = "";
     try {
       const result = await cloudinary.uploader.upload(pdfPath, {
-        folder: "podoclinic-demo/reports",
+        folder: "Podelyx-demo/reports",
         resource_type: "image",
       });
       pdfUrl = result.secure_url;
@@ -617,7 +617,7 @@ consultationsRouter.post("/:id/send-email", async (req: Request, res: Response) 
   // Si la clínica tiene SMTP configurado se usa; si no, se usa Ethereal (test) en desarrollo
   const transporter = await createTransporter(clinic);
 
-  const clinicName = clinic?.name ?? "PodoClinic";
+  const clinicName = clinic?.name ?? "Podelyx";
   const dateStr = new Date(consultation.consultation_date).toLocaleDateString("es-CL", {
     day: "2-digit", month: "long", year: "numeric"
   });
@@ -639,10 +639,10 @@ consultationsRouter.post("/:id/send-email", async (req: Request, res: Response) 
              <strong>${dateStr}</strong>, atendido/a por <strong>${consultation.specialist.full_name}</strong>.</p>
           <p style="color:#555;">Por favor, conserve este documento para su historial médico personal.</p>
           <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:16px;margin:24px 0;">
-            <p style="margin:0;color:#166534;font-size:13px;">📋 Este informe ha sido generado y certificado electrónicamente por PodoClinic.</p>
+            <p style="margin:0;color:#166534;font-size:13px;">📋 Este informe ha sido generado y certificado electrónicamente por Podelyx.</p>
           </div>
           <p style="color:#888;font-size:11px;border-top:1px solid #eee;padding-top:16px;">
-            Documento generado electrónicamente — PodoClinic · Cumple Ley 19.628 de Protección de Datos Personales (Chile)
+            Documento generado electrónicamente — Podelyx · Cumple Ley 19.628 de Protección de Datos Personales (Chile)
           </p>
         </div>
       `,
@@ -660,7 +660,7 @@ consultationsRouter.post("/:id/send-email", async (req: Request, res: Response) 
     if (!pdfUrl) {
       try {
         const result = await cloudinary.uploader.upload(pdfPath, {
-          folder: "podoclinic-demo/reports",
+          folder: "Podelyx-demo/reports",
           resource_type: "image",
         });
         pdfUrl = result.secure_url;
@@ -750,7 +750,7 @@ consultationsRouter.post("/:id/share-link", async (req: Request, res: Response) 
       });
       try {
         const result = await cloudinary.uploader.upload(pdfPath, {
-          folder: "podoclinic-demo/reports",
+          folder: "Podelyx-demo/reports",
           resource_type: "image",
         });
         pdfUrl = result.secure_url;
@@ -779,7 +779,7 @@ consultationsRouter.post("/:id/share-link", async (req: Request, res: Response) 
   const shareUrl = pdfUrl;
   const patientPhone = (consultation.patient as any).phone?.replace(/[^0-9]/g, "") ?? "";
 
-  const clinicName = clinic?.name ?? "PodoClinic";
+  const clinicName = clinic?.name ?? "Podelyx";
   const dateStr = new Date(consultation.consultation_date).toLocaleDateString("es-CL", {
     day: "2-digit", month: "long", year: "numeric"
   });

@@ -4,7 +4,7 @@ import prisma from "./lib/prisma";
 /**
  * Seed de demostración.
  * Limpia todos los datos y recarga un estado inicial ficticio con:
- *  - Clínica "Clínica Demo PodoClinic"
+ *  - Clínica "Clínica Demo Podelyx"
  *  - 1 usuario demo (admin) + 2 especialistas ficticios
  *  - 5 pacientes con consultas completas y fotografías de ejemplo
  *
@@ -62,7 +62,7 @@ async function clearData() {
 }
 
 async function main() {
-  console.log("🌱 Iniciando seed demo de PodoClinic...\n");
+  console.log("🌱 Iniciando seed demo de Podelyx...\n");
 
   await clearData();
 
@@ -70,14 +70,14 @@ async function main() {
   const clinic = await prisma.clinic.create({
     data: {
       id: CLINIC_ID,
-      name: "Clínica Demo PodoClinic",
+      name: "Clínica Demo Podelyx",
       address: "Av. Providencia 1234, Of. 502, Providencia, Santiago",
       phone: "+56 2 2345 6789",
-      email: "contacto@demo-podoclinic.cl",
-      website: "https://demo.podoclinic.cl",
+      email: "contacto@demo-Podelyx.cl",
+      website: "https://demo.Podelyx.cl",
       primary_color: "#0F6E56",
       consent_text:
-        "CONSENTIMIENTO INFORMADO\n\nYo, el/la paciente, declaro haber sido informado/a sobre los procedimientos podológicos a realizar, sus riesgos y beneficios. Autorizo voluntariamente la realización del tratamiento podológico y el registro de mis datos clínicos en el sistema PodoClinic.\n\nLos datos personales serán tratados con absoluta confidencialidad conforme a la Ley 19.628 de protección de datos personales de Chile.\n\n[NOTA: Estos son datos de demostración. En producción, aquí va el texto legal real de tu clínica.]",
+        "CONSENTIMIENTO INFORMADO\n\nYo, el/la paciente, declaro haber sido informado/a sobre los procedimientos podológicos a realizar, sus riesgos y beneficios. Autorizo voluntariamente la realización del tratamiento podológico y el registro de mis datos clínicos en el sistema Podelyx.\n\nLos datos personales serán tratados con absoluta confidencialidad conforme a la Ley 19.628 de protección de datos personales de Chile.\n\n[NOTA: Estos son datos de demostración. En producción, aquí va el texto legal real de tu clínica.]",
     },
   });
   console.log(`✅ Clínica: ${clinic.name}`);
@@ -93,7 +93,7 @@ async function main() {
       clinic_id: CLINIC_ID,
       role: "ADMIN",
       full_name: "Usuario Demo",
-      email: "demo@podoclinic.cl",
+      email: "demo@Podelyx.cl",
       password_hash: demoHash,
       totp_enabled: false,
       is_active: true,
@@ -109,7 +109,7 @@ async function main() {
       full_name: "Dra. Ana González Reyes",
       professional_title: "Podóloga Clínica",
       license_number: "POD-12345",
-      email: "ana.gonzalez@demo-podoclinic.cl",
+      email: "ana.gonzalez@demo-Podelyx.cl",
       password_hash: spec1Hash,
       totp_enabled: false,
       is_active: true,
@@ -125,7 +125,7 @@ async function main() {
       full_name: "Dr. Rodrigo Muñoz Salinas",
       professional_title: "Podólogo y Quiropodiatra",
       license_number: "POD-67890",
-      email: "rodrigo.munoz@demo-podoclinic.cl",
+      email: "rodrigo.munoz@demo-Podelyx.cl",
       password_hash: spec2Hash,
       totp_enabled: false,
       is_active: true,
@@ -253,7 +253,7 @@ async function main() {
         next_visit: "2026-05-24",
         recommendations: "Cambiar calzado, ejercicios de elongación de fascia plantar, hielo 10 min post actividad",
       },
-      report_pdf_url: "https://demo.podoclinic.cl/reports/demo-consulta-001.pdf",
+      report_pdf_url: "https://demo.Podelyx.cl/reports/demo-consulta-001.pdf",
     },
     {
       id: CONSULTATION_IDS[1],
@@ -296,7 +296,7 @@ async function main() {
         next_visit: "2026-05-26",
         recommendations: "Control podológico mensual, calzado de horma ancha, inspección diaria de pies",
       },
-      report_pdf_url: "https://demo.podoclinic.cl/reports/demo-consulta-002.pdf",
+      report_pdf_url: "https://demo.Podelyx.cl/reports/demo-consulta-002.pdf",
     },
     {
       id: CONSULTATION_IDS[2],
@@ -335,7 +335,7 @@ async function main() {
         next_visit: "2026-05-29",
         recommendations: "No compartir calzado, uso de chanclas en duchas/piscinas, vitamina C",
       },
-      report_pdf_url: "https://demo.podoclinic.cl/reports/demo-consulta-003.pdf",
+      report_pdf_url: "https://demo.Podelyx.cl/reports/demo-consulta-003.pdf",
     },
     {
       id: CONSULTATION_IDS[3],
@@ -374,7 +374,7 @@ async function main() {
         recommendations: "Reposo, elevación del pie, hielo 15 min c/4h, evitar calzado cerrado",
         referral: "Traumatología HSBA — Rx antero-posterior y oblicua del pie",
       },
-      report_pdf_url: "https://demo.podoclinic.cl/reports/demo-consulta-004.pdf",
+      report_pdf_url: "https://demo.Podelyx.cl/reports/demo-consulta-004.pdf",
     },
     {
       id: CONSULTATION_IDS[4],
@@ -411,7 +411,7 @@ async function main() {
         next_visit: "2026-06-05",
         recommendations: "Continuar laca en 1.° y 2.°, medias de algodón, calzado ventilado, desinfección de calzado con spray antifúngico",
       },
-      report_pdf_url: "https://demo.podoclinic.cl/reports/demo-consulta-005.pdf",
+      report_pdf_url: "https://demo.Podelyx.cl/reports/demo-consulta-005.pdf",
     },
   ];
 
@@ -436,9 +436,9 @@ async function main() {
 
   console.log("\n🎉 Seed demo completado exitosamente!");
   console.log("\n📋 Credenciales de acceso:");
-  console.log("   👤 Demo Admin:    demo@podoclinic.cl     / Demo1234!");
-  console.log("   👩‍⚕️ Especialista 1: ana.gonzalez@demo-podoclinic.cl / Especialista1!");
-  console.log("   👨‍⚕️ Especialista 2: rodrigo.munoz@demo-podoclinic.cl / Especialista2!");
+  console.log("   👤 Demo Admin:    demo@Podelyx.cl     / Demo1234!");
+  console.log("   👩‍⚕️ Especialista 1: ana.gonzalez@demo-Podelyx.cl / Especialista1!");
+  console.log("   👨‍⚕️ Especialista 2: rodrigo.munoz@demo-Podelyx.cl / Especialista2!");
 }
 
 main()

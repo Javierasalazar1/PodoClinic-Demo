@@ -12,8 +12,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
-        name: 'PodoClinic',
-        short_name: 'PodoClinic',
+        name: 'Podelyx',
+        short_name: 'Podelyx',
         description: 'Sistema de Historial Clínico Podológico Digital',
         theme_color: '#0F6E56',
         icons: [

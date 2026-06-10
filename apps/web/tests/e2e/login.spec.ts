@@ -4,7 +4,7 @@ test('login page has title and login form', async ({ page }) => {
   await page.goto('/login');
 
   // Expect a title "to contain" a substring.
-  await expect(page).toHaveTitle(/PodoClinic/);
+  await expect(page).toHaveTitle(/Podelyx/);
 
   // Expect an email input to be visible — actual placeholder in LoginPage.tsx
   const emailInput = page.getByPlaceholder('especialista@clinica.cl');

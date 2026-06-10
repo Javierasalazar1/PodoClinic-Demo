@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
 const INACTIVITY_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutos
-const LAST_ACTIVITY_KEY = "podoclinic-last-activity";
+const LAST_ACTIVITY_KEY = "Podelyx-last-activity";
 
 export interface AuthUser {
   id: string;
@@ -62,7 +62,7 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: "podoclinic-auth",
+      name: "Podelyx-auth",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         user: state.user,

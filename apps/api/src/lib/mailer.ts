@@ -43,6 +43,6 @@ export async function createTransporter(clinic: ClinicSmtp | null) {
 }
 
 /** Returns the "from" address for outgoing emails */
-export function getFromAddress(clinic: ClinicSmtp | null, label = "PodoClinic") {
-  return `"${label}" <${clinic?.smtp_user ?? "no-reply@podoclinic.com"}>`;
+export function getFromAddress(clinic: ClinicSmtp | null, label = "Podelyx") {
+  return `"${label}" <${clinic?.smtp_user ?? "no-reply@Podelyx.com"}>`;
 }

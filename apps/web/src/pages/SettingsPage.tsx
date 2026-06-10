@@ -1009,7 +1009,7 @@ export default function SettingsPage() {
                         className="text-xs font-extrabold uppercase tracking-wide transition-colors duration-300"
                         style={{ color: clinicForm.primary_color }}
                       >
-                        {clinicForm.name || "PodoClinic"}
+                        {clinicForm.name || "Podelyx"}
                       </div>
                       <div className="text-[8px] text-slate-400 dark:text-slate-500 leading-tight">
                         {clinicForm.address || "Av. Providencia 1234, Santiago"} <br />

@@ -82,7 +82,7 @@ export default function ForgotPasswordPage() {
               <line x1="15" y1="9" x2="15.01" y2="9" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">PodoClinic</h1>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Podelyx</h1>
         </div>
 
         <Card className="border-slate-700/50 bg-slate-800/50 backdrop-blur-xl shadow-2xl">

@@ -164,7 +164,7 @@ remindersRouter.post("/:patientId/send-email", async (req: Request, res: Respons
   const transporter = await createTransporter(clinic);
 
   await transporter.sendMail({
-    from: getFromAddress(clinic, clinic?.name || 'PodoClinic'),
+    from: getFromAddress(clinic, clinic?.name || 'Podelyx'),
     to: patient.email,
     subject: subject || "Recordatorio de cita",
     text: message,
