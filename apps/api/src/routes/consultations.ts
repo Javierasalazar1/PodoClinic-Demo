@@ -80,7 +80,12 @@ consultationsRouter.get("/", async (req: Request, res: Response) => {
       skip,
       take: parseInt(limit),
       orderBy: { consultation_date: "desc" },
-      include: {
+      select: {
+        id: true,
+        consultation_date: true,
+        consultation_type: true,
+        status: true,
+        chief_complaint: true,
         patient: { select: { id: true, full_name: true, national_id: true } },
         specialist: { select: { full_name: true } },
       },
