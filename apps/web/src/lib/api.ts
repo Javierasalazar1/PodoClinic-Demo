@@ -3,7 +3,7 @@ import { useAuthStore } from "@/stores/authStore";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001/api/v1";
 
 function getAccessToken(): string | null {
-  return sessionStorage.getItem("access_token");
+  return localStorage.getItem("access_token");
 }
 
 let isRefreshing = false;

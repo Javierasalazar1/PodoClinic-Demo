@@ -9,37 +9,43 @@ interface PrivateRouteProps {
 }
 
 export default function PrivateRoute({ children, roles }: PrivateRouteProps) {
-  const { user, accessToken, isLoggedOut, setAuth, clearAuth } = useAuthStore();
+  const { user, accessToken, isLoggedOut, setAuth, clearAuth, checkInactivity } = useAuthStore();
   const location = useLocation();
   const navigate = useNavigate();
-  // If the user explicitly logged out, don't try to restore the session
   const [isInitializing, setIsInitializing] = useState(!accessToken && !isLoggedOut);
 
   useEffect(() => {
-    // Skip refresh if there's already a token or the user explicitly logged out
+    // Si hay token pero hay inactividad de más de 10 minutos, hacer logout
+    if (accessToken && checkInactivity()) {
+      clearAuth();
+      navigate("/login", { replace: true });
+      return;
+    }
+
+    // Si no hay token y no fue logout explícito, intentar restaurar sesión via refresh cookie
     if (!accessToken && !isLoggedOut) {
       const initAuth = async () => {
         try {
-          const res = await apiFetch<{ accessToken: string; user: any }>("/auth/refresh", {
+          const res = await apiFetch<{ accessToken: string; user: unknown }>("/auth/refresh", {
             method: "POST",
           });
-          setAuth(res.user, res.accessToken);
-          
-          const redirectPath = sessionStorage.getItem("redirectPath");
+          setAuth(res.user as Parameters<typeof setAuth>[0], res.accessToken);
+
+          const redirectPath = localStorage.getItem("redirectPath");
           if (redirectPath) {
-            sessionStorage.removeItem("redirectPath");
+            localStorage.removeItem("redirectPath");
             navigate(redirectPath, { replace: true });
           }
-        } catch (err) {
+        } catch {
           clearAuth();
-          sessionStorage.setItem("redirectPath", location.pathname + location.search);
+          localStorage.setItem("redirectPath", location.pathname + location.search);
         } finally {
           setIsInitializing(false);
         }
       };
       initAuth();
     }
-  }, [accessToken, isLoggedOut, setAuth, clearAuth, location, navigate]);
+  }, [accessToken, isLoggedOut, setAuth, clearAuth, checkInactivity, location, navigate]);
 
   if (isInitializing) {
     return (

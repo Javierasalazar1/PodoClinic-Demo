@@ -7,12 +7,12 @@ import { apiFetch } from "@/lib/api";
 import { Button } from "@/components/ui/Button";
 
 // Inactivity limits
-const INACTIVITY_LIMIT_MS = 30 * 60 * 1000; // 30 minutes
+const INACTIVITY_LIMIT_MS = 10 * 60 * 1000; // 10 minutos
 const COUNTDOWN_MS = 60 * 1000; // 60 seconds
 
 export default function SessionManager() {
   const navigate = useNavigate();
-  const { clearAuth, accessToken } = useAuthStore();
+  const { clearAuth, accessToken, updateActivity } = useAuthStore();
   
   const [showWarning, setShowWarning] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60);
@@ -49,6 +49,7 @@ export default function SessionManager() {
 
     const resetTimer = () => {
       if (showWarning) return; // Don't reset if warning is already showing
+      updateActivity();
       
       clearTimeout(inactivityTimeout);
       clearInterval(countdownInterval);
